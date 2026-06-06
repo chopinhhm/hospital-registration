@@ -1,74 +1,54 @@
-# 互联网医院挂号系统
+<div align="center">
 
-> 基于 Spring Cloud Alibaba 微服务架构的医院挂号系统，实现分布式防重、流量治理、高可用缓存等核心能力
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0D1117&height=150&section=header&text=%E6%8C%82%E5%8F%B7%E7%B3%BB%E7%BB%9F&fontSize=36&fontColor=58A6FF&animation=fadeIn" />
 
-## 项目简介
+[![Spring Cloud](https://img.shields.io/badge/Spring_Cloud_Alibaba-0079BE?style=flat-square&logo=spring&logoColor=white)]()
+[![Redis Sentinel](https://img.shields.io/badge/Redis_Sentinel-DC382D?style=flat-square&logo=redis&logoColor=white)]()
+[![Lua](https://img.shields.io/badge/Lua-000080?style=flat-square)]())
+[![Sentinel](https://img.shields.io/badge/Sentinel-E60042?style=flat-square)]())
 
-为重医附院互联网医院打造的挂号核心微服务系统，采用 Spring Cloud Alibaba 技术栈，实现高并发挂号场景下的分布式原子防重、全链路流量治理、高可用缓存架构和异步消息解耦。
+</div>
 
-## 技术栈
+---
 
-| 技术 | 说明 |
-|------|------|
-| Spring Cloud Alibaba | Nacos 注册/配置中心、Gateway 网关、Sentinel 熔断限流 |
-| Spring Boot | 微服务核心框架 |
-| Redis 哨兵集群 | 高可用缓存 + 分布式锁 + 防重 |
-| RabbitMQ | 流量削峰、异步解耦、死信队列 |
-| MySQL | 数据持久化 |
-| Lua 脚本 | Redis 原子操作 |
+## ✨ Features
 
-## 核心亮点
+- 🔒 **三重分布式防重** — Redis Lua 原子操作 + DB 唯一索引 + 状态校验
+- 🌊 **全链路流量治理** — Gateway 自定义过滤器 + Sentinel 规则
+- 🏰 **高可用缓存** — Redis 哨兵集群 + 读写分离
+- 📨 **异步解耦** — RabbitMQ 流量削峰 + 死信队列
+- 🛡️ **故障隔离** — Feign 接口级容错策略
 
-- **分布式原子防重**：Redis + Lua 原子机制 + 数据库唯一索引，三重保障
-- **全链路流量治理**：网关自定义过滤器 + Sentinel 规则，精细化流控
-- **高可用缓存架构**：Redis 哨兵集群 + 读写分离，多级缓存策略
-- **微服务故障隔离**：Feign 自定义接口容错策略，级联故障防护
-- **流量削峰与异步解耦**：消息中间件 + 死信队列，保障核心链路稳定
+---
 
-## 系统架构
+## 🔒 Distributed Anti-Duplication Design
 
-```
-                      ┌─────────────┐
-                      │   Client    │
-                      └──────┬──────┘
-                             │
-                      ┌──────▼──────┐
-                      │   Gateway   │ ← 自定义过滤器(限流/鉴权)
-                      └──────┬──────┘
-                             │
-            ┌────────────────┼────────────────┐
-            │                │                │
-     ┌──────▼──────┐ ┌──────▼──────┐ ┌──────▼──────┐
-     │ Registration │ │  Schedule   │ │  Payment    │
-     │   Service    │ │  Service    │ │  Service    │
-     └──────┬──────┘ └─────────────┘ └─────────────┘
-            │
-     ┌──────┼──────────────────────┐
-     │      │                      │
-  ┌──▼──┐ ┌▼──────────┐  ┌──────▼──────┐
-  │Redis│ │  MySQL     │  │  RabbitMQ   │
-  │哨兵 │ │ (唯一索引)  │  │ (死信队列)   │
-  └─────┘ └───────────┘  └─────────────┘
-```
+\`\`\`
+Request → Gateway Rate Limit
+        → Service Layer Lua Script (SETNX + EXPIRE)
+        → DB Unique Index (patient_id, schedule_id, date)
+        → Business State Validation
+        → Create Registration Order ✓
+\`\`\`
 
-## 分布式防重设计
+**Three-Layer Protection:**
+1. **Redis Lua Atomic** — Millisecond-level dedup
+2. **Database Unique Index** — Final guarantee
+3. **State Machine Check** — Prevent duplicate transitions
 
-```
-请求到达 → 网关层限流 → Service 层 Lua 原子校验(Redis SETNX)
-                      → 数据库唯一索引兜底 → 创建挂号订单
-```
+---
 
-三重保障：
-1. **Redis Lua 原子操作**：SETNX + EXPIRE，毫秒级防重
-2. **数据库唯一索引**：(patient_id, schedule_id, date) 联合唯一索引
-3. **业务状态校验**：订单状态机，防止重复状态转移
+## 🚀 Quick Start
 
-## 快速开始
+\`\`\`bash
+git clone https://github.com/chopinhhm/hospital-registration.git
+cd hospital-registration
+docker-compose up -d
+mvn spring-boot:run
+\`\`\`
 
-1. 启动 Nacos、Redis Sentinel、MySQL、RabbitMQ
-2. 执行 `sql/init.sql`
-3. 按顺序启动：Gateway → Registration Service
+---
 
-## 许可证
+## 📄 License
 
-MIT License
+MIT © [chopinhhm](https://github.com/chopinhhm)
